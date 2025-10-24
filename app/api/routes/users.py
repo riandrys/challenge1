@@ -35,8 +35,8 @@ async def read_users(
 ) -> PaginatedResponse[UserPublic]:
     return await user_service.get_users(
         session,
-        skip=params.skip,
-        limit=params.limit,
+        page=params.page,
+        page_size=params.page_size,
         include_deleted=show_deleted_users,
     )
 

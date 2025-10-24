@@ -82,26 +82,21 @@ class UserService:
     async def get_users(
         self,
         session: AsyncSession,
-        skip: int = 0,
-        limit: int = 100,
+        page: int = 1,
+        page_size: int = 100,
         include_deleted: bool = False,
     ) -> PaginatedResponse[UserPublic]:
+        skip = (page - 1) * page_size
         users = await user_repository.get_list(
-            session, skip=skip, limit=limit, include_deleted=include_deleted
+            session, skip=skip, limit=page_size, include_deleted=include_deleted
         )
-        total = await user_service.count_users(session, include_deleted=include_deleted)
-
+        total = await user_repository.count(session, include_deleted=include_deleted)
         return PaginatedResponse.create(
             items=[UserPublic.model_validate(user) for user in users],
-            total=total,
-            skip=skip,
-            limit=limit,
+            total_items=total,
+            page=page,
+            page_size=page_size,
         )
-
-    async def count_users(
-        self, session: AsyncSession, include_deleted: bool = False
-    ) -> int:
-        return await user_repository.count(session, include_deleted)
 
 
 user_service = UserService()
