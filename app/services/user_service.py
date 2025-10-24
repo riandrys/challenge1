@@ -5,7 +5,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, status
 
 from app.repositories.user_repository import user_repository
-from app.models.user_model import User, UserCreate, UserUpdate
+from app.models.user_model import User, UserCreate, UserUpdate, UserPublic
+from app.schemas.common import PaginatedResponse
 
 
 class UserService:
@@ -79,9 +80,23 @@ class UserService:
         return user
 
     async def get_users(
-        self, session: AsyncSession, skip: int = 0, limit: int = 100
-    ) -> list[User]:
-        return await user_repository.get_list(session, skip=skip, limit=limit)
+        self,
+        session: AsyncSession,
+        skip: int = 0,
+        limit: int = 100,
+        include_deleted: bool = False,
+    ) -> PaginatedResponse[UserPublic]:
+        users = await user_repository.get_list(
+            session, skip=skip, limit=limit, include_deleted=include_deleted
+        )
+        total = await user_service.count_users(session, include_deleted=include_deleted)
+
+        return PaginatedResponse.create(
+            items=[UserPublic.model_validate(user) for user in users],
+            total=total,
+            skip=skip,
+            limit=limit,
+        )
 
     async def count_users(
         self, session: AsyncSession, include_deleted: bool = False

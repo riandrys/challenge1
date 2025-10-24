@@ -27,7 +27,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         if isinstance(obj_in, dict):
             user_data = obj_in
         else:
-            user_data = obj_in.model_dump(exclude_unset=True)
+            user_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
         if "password" in user_data and user_data["password"]:
             password = user_data["password"]
             hashed_password = get_password_hash(password)

@@ -1,13 +1,15 @@
 from typing import Generic, TypeVar
+
+from fastapi import Query
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
 
 class PaginationParams(BaseModel):
-    skip: int = Field(default=0, ge=0, description="Number of items to skip")
+    skip: int = Field(Query(default=0, ge=0, description="Number of items to skip"))
     limit: int = Field(
-        default=100, ge=1, le=100, description="Number of items to return"
+        Query(default=100, ge=1, le=100, description="Number of items to return")
     )
 
 

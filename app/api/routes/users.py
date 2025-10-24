@@ -2,16 +2,20 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, status
 from typing import Any
+
+from fastapi.params import Depends
+
 from app.api.deps import (
     CurrentUser,
     SessionDep,
+    get_current_active_superuser,
 )
 from app.models.user_model import (
-    UsersPublic,
     UserPublic,
     UserCreate,
     UserRegister,
     UserUpdate,
+    UserUpdateMe,
 )
 from app.schemas.common import PaginatedResponse, PaginationParams, MessageResponse
 from app.services.user_service import user_service
@@ -19,38 +23,28 @@ from app.services.user_service import user_service
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("", response_model=PaginatedResponse[UsersPublic])
+@router.get(
+    "",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=PaginatedResponse[UserPublic],
+)
 async def read_users(
     session: SessionDep,
-    current_user: CurrentUser,
-    params: PaginationParams = PaginationParams(),
-) -> PaginatedResponse[UsersPublic]:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges",
-        )
-
-    users = await user_service.get_users(session, skip=params.skip, limit=params.limit)
-    total = await user_service.count_users(session)
-
-    return PaginatedResponse.create(
-        items=[UsersPublic.model_validate(user) for user in users],
-        total=total,
+    params: PaginationParams = Depends(),  # type: ignore[assignment]
+    show_deleted_users: bool = False,
+) -> PaginatedResponse[UserPublic]:
+    return await user_service.get_users(
+        session,
         skip=params.skip,
         limit=params.limit,
+        include_deleted=show_deleted_users,
     )
 
 
-@router.post("/", response_model=UserPublic)
-async def create_user(
-    session: SessionDep, current_user: CurrentUser, user_in: UserCreate
-) -> Any:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges",
-        )
+@router.post(
+    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
+)
+async def create_user(session: SessionDep, user_in: UserCreate) -> Any:
     user = await user_service.create_user(session, user_in)
     return user
 
@@ -76,9 +70,10 @@ async def read_user_me(
 async def update_user_me(
     session: SessionDep,
     current_user: CurrentUser,
-    user_in: UserUpdate,
+    user_in: UserUpdateMe,
 ) -> UserPublic:
-    user = await user_service.update_user(session, current_user, user_in)
+    user_update = UserUpdate.model_validate(user_in)
+    user = await user_service.update_user(session, current_user, user_update)
 
     return UserPublic.model_validate(user)
 
@@ -98,10 +93,50 @@ async def delete_user_me(
 
 
 @router.get("/{user_id}", response_model=UserPublic)
-async def read_user(
+async def read_user_by_id(
     session: SessionDep,
+    current_user: CurrentUser,
     user_id: uuid.UUID,
 ) -> UserPublic:
     user = await user_service.get_user_by_id(session, user_id)
+    if user == current_user:
+        return UserPublic.model_validate(user)
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges",
+        )
+    return UserPublic.model_validate(user)
+
+
+@router.patch(
+    "/{user_id}",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic,
+)
+async def update_user(
+    session: SessionDep,
+    user_id: uuid.UUID,
+    user_in: UserUpdate,
+) -> UserPublic:
+    user_to_update = await user_service.get_user_by_id(session, user_id)
+    user = await user_service.update_user(session, user_to_update, user_in)
 
     return UserPublic.model_validate(user)
+
+
+@router.delete(
+    "/{user_id}",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=MessageResponse,
+)
+async def delete_user(
+    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
+) -> MessageResponse:
+    user = await user_service.get_user_by_id(session, user_id)
+    if user == current_user:
+        raise HTTPException(
+            status_code=403, detail="Super users are not allowed to delete themselves"
+        )
+    await user_service.delete_user(session, user_id)
+    return MessageResponse(message="User deleted successfully")

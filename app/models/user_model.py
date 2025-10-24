@@ -2,12 +2,13 @@ import uuid
 
 from pydantic import EmailStr
 from sqlmodel import Field, SQLModel
+from datetime import datetime
 
 from app.models.base_model import BaseModel
 
 
 # Shared properties
-class UserBase(BaseModel):
+class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
@@ -41,13 +42,15 @@ class UpdatePassword(SQLModel):
 
 
 # Database model, database table inferred from class name
-class User(UserBase, table=True):
+class User(BaseModel, UserBase, table=True):
     hashed_password: str
 
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
+    created_at: datetime
+    is_deleted: bool
 
 
 class UsersPublic(SQLModel):

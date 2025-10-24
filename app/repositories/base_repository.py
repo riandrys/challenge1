@@ -76,7 +76,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.model_dump(exclude_unset=True)  # type: ignore[attr-defined]
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)  # type: ignore[attr-defined]
         db_obj.sqlmodel_update(update_data)
         session.add(db_obj)
         await session.commit()
