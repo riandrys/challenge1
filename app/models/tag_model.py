@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -17,7 +16,7 @@ class PostTagLink(SQLModel, table=True):
 
 
 class Tag(BaseModel, TagBase, table=True):
-    posts: List["Post"] = Relationship(  # type: ignore # noqa: F821
+    posts: list["Post"] = Relationship(  # type: ignore # noqa: F821
         back_populates="tags",
         link_model=PostTagLink,
         sa_relationship_kwargs={"lazy": "selectin"},

@@ -3,6 +3,7 @@ import uuid
 from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.models import User
 from app.models.tag_model import Tag
 from app.schemas.tag_schema import TagCreate, TagUpdate, TagPublic
 from app.repositories.tag_repository import tag_repository
@@ -20,11 +21,17 @@ class TagService(BaseService[Tag, TagCreate, TagUpdate, TagPublic]):
     async def get_tags(
         self,
         session: AsyncSession,
+        current_user: User,
         params: PaginationParams,
         include_deleted: bool = False,
+        only_deleted: bool = False,
     ) -> PaginatedResponse[TagPublic]:
         return await self.get_list_paginated(
-            session, params=params, include_deleted=include_deleted
+            session,
+            current_user,
+            params=params,
+            include_deleted=include_deleted,
+            only_deleted=only_deleted,
         )
 
     async def create_tag(self, session: AsyncSession, tag_in: TagCreate) -> Tag:

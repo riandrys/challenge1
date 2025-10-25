@@ -30,18 +30,25 @@ router = APIRouter(prefix="/users", tags=["users"])
 )
 async def read_users(
     session: SessionDep,
+    current_user: CurrentUser,
     params: PaginationParams = Depends(),  # type: ignore[assignment]
-    show_deleted_users: bool = False,
+    include_deleted: bool = False,
+    only_deleted: bool = False,
 ):
     return await user_service.get_users(
         session,
+        current_user,
         params=params,
-        include_deleted=show_deleted_users,
+        include_deleted=include_deleted,
+        only_deleted=only_deleted,
     )
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_user(session: SessionDep, user_in: UserCreate) -> Any:
     user = await user_service.create_user(session, user_in)
@@ -139,3 +146,16 @@ async def delete_user(
         )
     await user_service.delete_user(session, user_id)
     return MessageResponse(message="User deleted successfully")
+
+
+@router.post(
+    "/{user_id}/restore",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic,
+)
+async def restore_user(
+    session: SessionDep,
+    user_id: uuid.UUID,
+) -> UserPublic:
+    user = await user_service.restore_user(session, user_id)
+    return user

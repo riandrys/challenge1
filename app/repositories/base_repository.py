@@ -1,7 +1,9 @@
 import uuid
 from typing import Any, Generic, TypeVar
+
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel.sql._expression_select_cls import Select, SelectOfScalar
 
 from app.models.base_model import BaseModel
 
@@ -14,6 +16,18 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: type[ModelType]):
         self.model = model
 
+    def _get_query_with_filter(
+        self,
+        statement: Select | SelectOfScalar,
+        include_deleted: bool = False,
+        only_deleted: bool = False,
+    ) -> Select | SelectOfScalar:
+        if only_deleted:
+            return statement.where(self.model.is_deleted == True)  # noqa: E712
+        if not include_deleted:
+            return statement.where(self.model.is_deleted == False)  # noqa: E712
+        return statement
+
     async def get(
         self,
         session: AsyncSession,
@@ -21,8 +35,9 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         include_deleted: bool = False,
     ) -> ModelType | None:
         statement = select(self.model).where(self.model.id == entity_id)
-        if not include_deleted:
-            statement = statement.where(self.model.is_deleted == False)  # noqa: E712
+        statement = self._get_query_with_filter(
+            statement, include_deleted=include_deleted
+        )
 
         result = await session.exec(statement)
         return result.first()
@@ -33,11 +48,12 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
+        only_deleted: bool = False,
     ) -> list[ModelType]:
         statement = select(self.model)
-        if not include_deleted:
-            statement = statement.where(self.model.is_deleted == False)  # noqa: E712
-
+        statement = self._get_query_with_filter(
+            statement, include_deleted=include_deleted, only_deleted=only_deleted
+        )
         statement = statement.offset(skip).limit(limit)
         result = await session.exec(statement)
         return list(result.all())
@@ -46,11 +62,12 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self,
         session: AsyncSession,
         include_deleted: bool = False,
+        only_deleted: bool = False,
     ) -> int:
         statement = select(func.count()).select_from(self.model)
-        if not include_deleted:
-            statement = statement.where(self.model.is_deleted == False)  # noqa: E712
-
+        statement = self._get_query_with_filter(
+            statement, include_deleted=include_deleted, only_deleted=only_deleted
+        )
         result = await session.exec(statement)
         return result.one()
 

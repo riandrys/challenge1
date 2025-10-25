@@ -82,10 +82,17 @@ class UserService(BaseService[User, UserCreate, UserUpdate, UserPublic]):
     async def get_users(
         self,
         session: AsyncSession,
+        current_user: User,
         params: PaginationParams,
         include_deleted: bool = False,
+        only_deleted: bool = False,
     ) -> PaginatedResponse[UserPublic]:
-        return await self.get_list_paginated(session, params, include_deleted)
+        return await self.get_list_paginated(
+            session, current_user, params, include_deleted, only_deleted
+        )
+
+    async def restore_user(self, session: AsyncSession, user_id: uuid.UUID) -> User:
+        return await self.restore(session, user_id)
 
 
 user_service = UserService()
