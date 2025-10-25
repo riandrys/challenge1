@@ -30,7 +30,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get_list(
         self,
         session: AsyncSession,
-        *,
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
@@ -58,7 +57,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def create(
         self,
         session: AsyncSession,
-        *,
         obj_in: CreateSchemaType,
     ) -> ModelType:
         db_obj = self.model.model_validate(obj_in)
@@ -103,8 +101,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         entity_id: uuid.UUID,
     ) -> ModelType | None:
         db_obj = await self.get(session, entity_id=entity_id, include_deleted=True)
-        if not db_obj or not db_obj.is_deleted:
+        if not db_obj:
             return None
+        if not db_obj.is_deleted:
+            return db_obj
 
         db_obj.restore()
         session.add(db_obj)

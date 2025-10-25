@@ -4,8 +4,9 @@ from pydantic import EmailStr
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.security import get_password_hash, verify_password
-from app.models.user_model import User, UserCreate, UserUpdate
+from app.models.user_model import User
 from app.repositories.base_repository import BaseRepository
+from app.schemas.user_schema import UserCreate, UserUpdate
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
@@ -23,7 +24,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
     async def update(
         self, session: AsyncSession, db_obj: User, obj_in: UserUpdate | dict[str, Any]
-    ) -> Any:
+    ) -> User:
         if isinstance(obj_in, dict):
             user_data = obj_in
         else:

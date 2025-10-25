@@ -5,25 +5,30 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, status
 
 from app.repositories.user_repository import user_repository
-from app.models.user_model import User, UserCreate, UserUpdate, UserPublic
-from app.schemas.common import PaginatedResponse
+from app.models.user_model import User
+from app.schemas.common import PaginatedResponse, PaginationParams
+from app.services.base_service import BaseService
+from app.schemas.user_schema import UserCreate, UserUpdate, UserPublic
 
 
-class UserService:
+class UserService(BaseService[User, UserCreate, UserUpdate, UserPublic]):
+    def __init__(self):
+        super().__init__(user_repository, UserPublic)
+
     async def get_user_by_id(self, session: AsyncSession, user_id: uuid.UUID) -> User:
-        user = await user_repository.get(session, entity_id=user_id)
-        if not user:
+        return await self.get_by_id(session, entity_id=user_id)
+
+    async def get_user_by_email(
+        self, session: AsyncSession, email: EmailStr, include_deleted: bool = False
+    ) -> User:
+        user = await user_repository.get_by_email(
+            session=session, email=email, include_deleted=include_deleted
+        )
+        if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
         return user
-
-    async def get_user_by_email(
-        self, session: AsyncSession, email: EmailStr, include_deleted: bool = False
-    ) -> User | None:
-        return await user_repository.get_by_email(
-            session=session, email=email, include_deleted=include_deleted
-        )
 
     async def create_user(self, session: AsyncSession, user_in: UserCreate) -> User:
         existing_user = await user_repository.get_by_email(
@@ -54,12 +59,7 @@ class UserService:
         )
 
     async def delete_user(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
-        deleted = await user_repository.soft_delete(session, entity_id=user_id)
-        if not deleted:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
-        return deleted
+        return await self.delete(session, entity_id=user_id)
 
     async def authenticate(
         self, session: AsyncSession, email: EmailStr, password: str
@@ -82,21 +82,10 @@ class UserService:
     async def get_users(
         self,
         session: AsyncSession,
-        page: int = 1,
-        page_size: int = 100,
+        params: PaginationParams,
         include_deleted: bool = False,
     ) -> PaginatedResponse[UserPublic]:
-        skip = (page - 1) * page_size
-        users = await user_repository.get_list(
-            session, skip=skip, limit=page_size, include_deleted=include_deleted
-        )
-        total = await user_repository.count(session, include_deleted=include_deleted)
-        return PaginatedResponse.create(
-            items=[UserPublic.model_validate(user) for user in users],
-            total_items=total,
-            page=page,
-            page_size=page_size,
-        )
+        return await self.get_list_paginated(session, params, include_deleted)
 
 
 user_service = UserService()

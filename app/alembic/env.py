@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.core.config import settings
 from sqlmodel import SQLModel
 from app.models.user_model import User  # noqa: F401
+from app.models.post_model import Post  # noqa: F401
+from app.models.comment_model import Comment  # noqa: F401
+from app.models.tag_model import Tag, PostTagLink  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

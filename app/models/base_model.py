@@ -9,20 +9,20 @@ import sqlalchemy as sa
 class TimestampMixin(SQLModel):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_column=sa.Column(
-            sa.DateTime(timezone=True),
-            server_default=func.now(),
-            nullable=False,
-        ),
+        sa_type=sa.DateTime(timezone=True),
+        nullable=False,
+        sa_column_kwargs={
+            "server_default": func.now(),
+        },
     )
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_column=sa.Column(
-            sa.DateTime(timezone=True),
-            server_default=func.now(),
-            onupdate=func.now(),
-            nullable=False,
-        ),
+        sa_type=sa.DateTime(timezone=True),
+        nullable=False,
+        sa_column_kwargs={
+            "server_default": func.now(),
+            "onupdate": func.now(),
+        },
     )
 
 
@@ -30,10 +30,8 @@ class SoftDeleteMixin(SQLModel):
     is_deleted: bool = Field(default=False, nullable=False, index=True)
     deleted_at: datetime | None = Field(
         default=None,
-        sa_column=sa.Column(
-            sa.DateTime(timezone=True),
-            nullable=True,
-        ),
+        sa_type=sa.DateTime(timezone=True),
+        nullable=True,
     )
 
     def soft_delete(self) -> None:

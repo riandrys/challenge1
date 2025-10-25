@@ -1,11 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
-from app.models.user_model import User, UserCreate
+from app.models.user_model import User
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.repositories.user_repository import user_repository
 
 from app.core.config import settings
+from app.schemas.user_schema import UserCreate
 
 engine: AsyncEngine = create_async_engine(
     settings.async_database_url,
