@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
@@ -8,9 +8,7 @@ from app.schemas.post_schema import PostBase
 
 
 class Post(BaseModel, PostBase, table=True):
-    author_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
+    author_id: UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
     author: "User" = Relationship(  # type: ignore # noqa: F821
         back_populates="posts", sa_relationship_kwargs={"lazy": "selectin"}
     )

@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 from typing import Any, Generic, TypeVar
 
 from sqlmodel import select, func
@@ -31,15 +31,15 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
         include_deleted: bool = False,
     ) -> ModelType | None:
         statement = select(self.model).where(self.model.id == entity_id)
-        statement = self._get_query_with_filter(
+        filtered_statement = self._get_query_with_filter(
             statement, include_deleted=include_deleted
         )
 
-        result = await session.exec(statement)
+        result = await session.exec(filtered_statement)
         return result.first()
 
     async def get_list(
@@ -51,11 +51,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         only_deleted: bool = False,
     ) -> list[ModelType]:
         statement = select(self.model)
-        statement = self._get_query_with_filter(
+        filtered_statement = self._get_query_with_filter(
             statement, include_deleted=include_deleted, only_deleted=only_deleted
         )
-        statement = statement.offset(skip).limit(limit)
-        result = await session.exec(statement)
+        filtered_statement = filtered_statement.offset(skip).limit(limit)
+        result = await session.exec(filtered_statement)
         return list(result.all())
 
     async def count(
@@ -65,10 +65,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         only_deleted: bool = False,
     ) -> int:
         statement = select(func.count()).select_from(self.model)
-        statement = self._get_query_with_filter(
+        filtered_statement = self._get_query_with_filter(
             statement, include_deleted=include_deleted, only_deleted=only_deleted
         )
-        result = await session.exec(statement)
+        result = await session.exec(filtered_statement)
         return result.one()
 
     async def create(
@@ -101,7 +101,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def soft_delete(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
     ) -> bool:
         db_obj = await self.get(session, entity_id=entity_id)
         if not db_obj:
@@ -115,7 +115,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def restore(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
     ) -> ModelType | None:
         db_obj = await self.get(session, entity_id=entity_id, include_deleted=True)
         if not db_obj:
@@ -132,7 +132,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def remove(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
     ) -> bool:
         db_obj = await self.get(session, entity_id=entity_id, include_deleted=True)
         if not db_obj:

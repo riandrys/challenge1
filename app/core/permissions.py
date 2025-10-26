@@ -10,7 +10,6 @@ class OwnableResource(Protocol):
 
 
 class PermissionChecker:
-
     @staticmethod
     def is_owner(user: User, resource: OwnableResource) -> bool:
         return user.id == resource.author_id
@@ -21,11 +20,15 @@ class PermissionChecker:
 
     @staticmethod
     def can_modify(user: User, resource: OwnableResource) -> bool:
-        return PermissionChecker.is_superuser(user) or PermissionChecker.is_owner(user, resource)
+        return PermissionChecker.is_superuser(user) or PermissionChecker.is_owner(
+            user, resource
+        )
 
     @staticmethod
     def can_delete(user: User, resource: OwnableResource) -> bool:
-        return PermissionChecker.is_superuser(user) or PermissionChecker.is_owner(user, resource)
+        return PermissionChecker.is_superuser(user) or PermissionChecker.is_owner(
+            user, resource
+        )
 
     @staticmethod
     def can_view_deleted(user: User) -> bool:
@@ -36,7 +39,7 @@ class PermissionChecker:
         if not PermissionChecker.can_modify(user, resource):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to perform this action"
+                detail="Not enough permissions to perform this action",
             )
 
     @staticmethod
@@ -44,7 +47,7 @@ class PermissionChecker:
         if not PermissionChecker.is_superuser(user):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Superuser privileges required"
+                detail="Superuser privileges required",
             )
 
 

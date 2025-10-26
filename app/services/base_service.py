@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 from typing import Generic, TypeVar
 
 from fastapi import HTTPException, status
@@ -59,9 +59,15 @@ class BaseService(
     async def get_by_id(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
+        current_user: User | None = None,
         include_deleted: bool = False,
     ) -> ModelType:
+        if include_deleted and current_user and not current_user.is_superuser:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to view deleted items",
+            )
         item = await self.repository.get(
             session, entity_id=entity_id, include_deleted=include_deleted
         )
@@ -82,7 +88,7 @@ class BaseService(
     async def update(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
         obj_in: UpdateSchemaType,
     ) -> ModelType:
         db_obj = await self.repository.get(session, entity_id=entity_id)
@@ -97,7 +103,7 @@ class BaseService(
     async def delete(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
     ) -> bool:
         deleted = await self.repository.soft_delete(session, entity_id=entity_id)
         if not deleted:
@@ -110,7 +116,7 @@ class BaseService(
     async def restore(
         self,
         session: AsyncSession,
-        entity_id: uuid.UUID,
+        entity_id: UUID,
     ) -> ModelType:
         item = await self.repository.restore(session, entity_id=entity_id)
         if not item:

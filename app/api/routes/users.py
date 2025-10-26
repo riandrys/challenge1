@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 from typing import Any
@@ -102,7 +102,7 @@ async def delete_user_me(
 async def read_user_by_id(
     session: SessionDep,
     current_user: CurrentUser,
-    user_id: uuid.UUID,
+    user_id: UUID,
 ):
     user = await user_service.get_user_by_id(session, user_id)
     if user == current_user:
@@ -122,7 +122,7 @@ async def read_user_by_id(
 )
 async def update_user(
     session: SessionDep,
-    user_id: uuid.UUID,
+    user_id: UUID,
     user_in: UserUpdate,
 ):
     user_to_update = await user_service.get_user_by_id(session, user_id)
@@ -137,7 +137,7 @@ async def update_user(
     response_model=MessageResponse,
 )
 async def delete_user(
-    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
+    session: SessionDep, current_user: CurrentUser, user_id: UUID
 ) -> MessageResponse:
     user = await user_service.get_user_by_id(session, user_id)
     if user == current_user:
@@ -155,7 +155,7 @@ async def delete_user(
 )
 async def restore_user(
     session: SessionDep,
-    user_id: uuid.UUID,
-) -> UserPublic:
+    user_id: UUID,
+):
     user = await user_service.restore_user(session, user_id)
     return user

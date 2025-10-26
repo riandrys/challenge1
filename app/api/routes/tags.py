@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
@@ -59,7 +59,7 @@ async def create_tag(
 )
 async def read_tag_by_id(
     session: SessionDep,
-    tag_id: uuid.UUID,
+    tag_id: UUID,
 ):
     return await tag_service.get_tag_by_id(session, tag_id)
 
@@ -73,7 +73,7 @@ async def read_tag_by_id(
 )
 async def update_tag(
     session: SessionDep,
-    tag_id: uuid.UUID,
+    tag_id: UUID,
     tag_in: TagUpdate,
 ):
     return await tag_service.update_tag(session, tag_id, tag_in)
@@ -88,13 +88,13 @@ async def update_tag(
 )
 async def delete_tag(
     session: SessionDep,
-    tag_id: uuid.UUID,
+    tag_id: UUID,
 ):
     await tag_service.delete_tag(session, tag_id)
     return MessageResponse(message="Tag deleted successfully")
 
 
-@router.get(
+@router.post(
     "/{tag_id}/restore",
     summary="Restore a tag by ID",
     description="Restore a deleted tag by its ID. Only superusers can delete tags.",
@@ -103,6 +103,6 @@ async def delete_tag(
 )
 async def restore(
     session: SessionDep,
-    tag_id: uuid.UUID,
+    tag_id: UUID,
 ):
     return await tag_service.restore_tag(session, tag_id)

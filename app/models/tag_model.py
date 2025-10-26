@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -7,12 +7,8 @@ from app.schemas.tag_schema import TagBase
 
 
 class PostTagLink(SQLModel, table=True):
-    post_id: uuid.UUID = Field(
-        foreign_key="post.id", primary_key=True, ondelete="CASCADE"
-    )
-    tag_id: uuid.UUID = Field(
-        foreign_key="tag.id", primary_key=True, ondelete="CASCADE"
-    )
+    post_id: UUID = Field(foreign_key="post.id", primary_key=True, ondelete="CASCADE")
+    tag_id: UUID = Field(foreign_key="tag.id", primary_key=True, ondelete="CASCADE")
 
 
 class Tag(BaseModel, TagBase, table=True):

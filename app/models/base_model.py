@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID, uuid4
 from datetime import datetime, UTC
 
 from sqlalchemy import func
@@ -44,4 +44,4 @@ class SoftDeleteMixin(SQLModel):
 
 
 class BaseModel(TimestampMixin, SoftDeleteMixin, SQLModel):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)

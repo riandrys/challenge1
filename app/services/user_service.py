@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from pydantic import EmailStr
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,7 +15,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, UserPublic]):
     def __init__(self):
         super().__init__(user_repository, UserPublic)
 
-    async def get_user_by_id(self, session: AsyncSession, user_id: uuid.UUID) -> User:
+    async def get_user_by_id(self, session: AsyncSession, user_id: UUID) -> User:
         return await self.get_by_id(session, entity_id=user_id)
 
     async def get_user_by_email(
@@ -58,7 +58,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, UserPublic]):
             session, db_obj=current_user, obj_in=user_in
         )
 
-    async def delete_user(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+    async def delete_user(self, session: AsyncSession, user_id: UUID) -> bool:
         return await self.delete(session, entity_id=user_id)
 
     async def authenticate(
@@ -91,7 +91,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, UserPublic]):
             session, current_user, params, include_deleted, only_deleted
         )
 
-    async def restore_user(self, session: AsyncSession, user_id: uuid.UUID) -> User:
+    async def restore_user(self, session: AsyncSession, user_id: UUID) -> User:
         return await self.restore(session, user_id)
 
 

@@ -8,21 +8,22 @@ from sqlmodel import SQLModel, Field
 from app.core.security import validate_password_strength
 
 StrongPasswordStr = Annotated[
-    str,
-    Field(min_length=8, max_length=40),
-    AfterValidator(validate_password_strength)
+    str, Field(min_length=8, max_length=40), AfterValidator(validate_password_strength)
 ]
+
 
 def validate_optional_password(v: str | None) -> str | None:
     if v is None:
         return None  # Permite que el valor sea nulo
     return validate_password_strength(v)
 
+
 OptionalStrongPasswordStr = Annotated[
     str | None,
     Field(default=None, min_length=8, max_length=40),
-    AfterValidator(validate_optional_password)
+    AfterValidator(validate_optional_password),
 ]
+
 
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)

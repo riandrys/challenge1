@@ -1,5 +1,5 @@
 from datetime import datetime
-import uuid
+from uuid import UUID
 
 from sqlmodel import SQLModel, Field
 
@@ -19,6 +19,6 @@ class TagUpdate(TagBase):
 
 
 class TagPublic(TagBase):
-    id: uuid.UUID
+    id: UUID
     created_at: datetime
     is_deleted: bool

@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,7 +15,7 @@ class TagService(BaseService[Tag, TagCreate, TagUpdate, TagPublic]):
     def __init__(self):
         super().__init__(tag_repository, TagPublic)
 
-    async def get_tag_by_id(self, session: AsyncSession, tag_id: uuid.UUID) -> Tag:
+    async def get_tag_by_id(self, session: AsyncSession, tag_id: UUID) -> Tag:
         return await self.get_by_id(session, tag_id)
 
     async def get_tags(
@@ -44,7 +44,7 @@ class TagService(BaseService[Tag, TagCreate, TagUpdate, TagPublic]):
         return await self.create(session, tag_in)
 
     async def update_tag(
-        self, session: AsyncSession, tag_id: uuid.UUID, tag_in: TagUpdate
+        self, session: AsyncSession, tag_id: UUID, tag_in: TagUpdate
     ) -> Tag:
         tag = await self.get_by_id(session, tag_id)
         if tag_in.name and tag_in.name != tag.name:
@@ -56,10 +56,11 @@ class TagService(BaseService[Tag, TagCreate, TagUpdate, TagPublic]):
                 )
         return await tag_repository.update(session, tag, tag_in)
 
-    async def delete_tag(self, session: AsyncSession, tag_id: uuid.UUID) -> bool:
+    async def delete_tag(self, session: AsyncSession, tag_id: UUID) -> bool:
+        # TODO check if tag is associated with any posts before deleting
         return await self.delete(session, tag_id)
 
-    async def restore_tag(self, session: AsyncSession, tag_id: uuid.UUID) -> Tag:
+    async def restore_tag(self, session: AsyncSession, tag_id: UUID) -> Tag:
         return await self.restore(session, tag_id)
 
 

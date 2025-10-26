@@ -1,5 +1,5 @@
 from datetime import datetime
-import uuid
+from uuid import UUID
 
 from sqlmodel import SQLModel, Field
 
@@ -9,8 +9,8 @@ class CommentBase(SQLModel):
 
 
 class CommentCreate(CommentBase):
-    post_id: uuid.UUID
-    author_id: uuid.UUID
+    post_id: UUID
+    author_id: UUID
 
 
 class CommentUpdate(CommentBase):
@@ -18,8 +18,8 @@ class CommentUpdate(CommentBase):
 
 
 class CommentPublic(CommentBase):
-    id: uuid.UUID
-    post_id: uuid.UUID
-    author_id: uuid.UUID
+    id: UUID
+    post_id: UUID
+    author_id: UUID
     created_at: datetime
     is_deleted: bool

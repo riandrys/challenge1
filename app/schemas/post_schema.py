@@ -1,7 +1,11 @@
-import uuid
+from uuid import UUID
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field
+
+from app.schemas.comment_schema import CommentPublic
+from app.schemas.tag_schema import TagPublic
+from app.schemas.user_schema import UserPublic
 
 
 class PostBase(SQLModel):
@@ -12,28 +16,26 @@ class PostBase(SQLModel):
 class PostCreate(SQLModel):
     title: str = Field(min_length=3, max_length=200)
     content: str = Field(min_length=10)
-    tag_ids: list[int] = Field(default_factory=list)
+    tag_ids: list[UUID] = Field(default_factory=list)
 
 
 class PostUpdate(SQLModel):
     title: str | None = Field(default=None, min_length=3, max_length=255)
     content: str | None = Field(default=None, min_length=10)
-    tag_ids: list[uuid.UUID] = []
+    tag_ids: list[UUID] = Field(default_factory=list)
 
 
 class PostPublic(PostBase):
-    id: uuid.UUID
-    author_id: uuid.UUID
+    id: UUID
+    author_id: UUID
     created_at: datetime
     is_deleted: bool
 
 
-# Schema for reading a post with author info
 class PostReadWithAuthor(PostPublic):
-    author: "UserPublic"  # type: ignore # noqa: F821
+    author: UserPublic
 
 
-# Schema for reading a post with all relationships
-class PostReadWithRelations(PostReadWithAuthor):
-    tags: list["TagRead"] = []  # type: ignore # noqa: F821
-    comments: list["CommentRead"] = []  # type: ignore # noqa: F821
+class PostPublicWithRelations(PostReadWithAuthor):
+    tags: list[TagPublic] = []
+    comments: list[CommentPublic] = []
