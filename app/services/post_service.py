@@ -82,7 +82,7 @@ class PostService(BaseService[Post, PostCreate, PostUpdate, PostPublic]):
 
         permission_checker.require_owner_or_superuser(current_user, post)
 
-        # TODO before delete the post i need delete the associated comments
+        # TODO before delete the post i need to delete the associated comments
         return await self.delete(session, post_id)
 
 

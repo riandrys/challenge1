@@ -57,7 +57,12 @@ class TagService(BaseService[Tag, TagCreate, TagUpdate, TagPublic]):
         return await tag_repository.update(session, tag, tag_in)
 
     async def delete_tag(self, session: AsyncSession, tag_id: UUID) -> bool:
-        # TODO check if tag is associated with any posts before deleting
+        posts_count = await tag_repository.count_posts_by_tag(session, tag_id=tag_id)
+        if posts_count:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete this tag. It is associated with {posts_count} post(s)",
+            )
         return await self.delete(session, tag_id)
 
     async def restore_tag(self, session: AsyncSession, tag_id: UUID) -> Tag:

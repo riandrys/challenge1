@@ -100,6 +100,8 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             result = await session.exec(statement)
             tags = list(result.all())
             db_obj.tags = tags
+        else:
+            db_obj.tags = []
 
         session.add(db_obj)
         await session.commit()

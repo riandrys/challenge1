@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 
+from pydantic import field_validator
 from sqlmodel import SQLModel, Field
 
 from app.schemas.comment_schema import CommentPublic
@@ -39,3 +40,8 @@ class PostReadWithAuthor(PostPublic):
 class PostPublicWithRelations(PostReadWithAuthor):
     tags: list[TagPublic] = []
     comments: list[CommentPublic] = []
+
+    @field_validator("comments", mode="before")
+    @classmethod
+    def filter_deleted_comments(cls, v):
+        return [comment for comment in v if not comment.is_deleted]

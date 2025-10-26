@@ -9,8 +9,7 @@ class CommentBase(SQLModel):
 
 
 class CommentCreate(CommentBase):
-    post_id: UUID
-    author_id: UUID
+    pass
 
 
 class CommentUpdate(CommentBase):
